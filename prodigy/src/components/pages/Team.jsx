@@ -400,7 +400,7 @@ Please provide helpful project management insights, suggestions, or generate req
         }
 
         .ai-card {
-          background: linear-gradient(to right, #9333ea, #3b82f6);
+          background: linear-gradient(to right, #a78bfa, #60a5fa);
           border: none;
         }
 
