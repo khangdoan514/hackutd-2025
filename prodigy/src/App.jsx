@@ -7,6 +7,7 @@ import Login from './components/auth/Login'
 import Signup from './components/auth/Signup'
 import ForgotPassword from './components/auth/ForgotPassword'
 import ProfileSetup from './components/profile/ProfileSetup'
+import Dashboard from './components/pages/Dashboard'
 import './App.css'
 
 function App() {
@@ -55,10 +56,10 @@ function App() {
         <Route path="/forgot-password" element={<ForgotPassword />} />
 
         {/* Profile Setup */}
-        <Route path="/profile-setup" element={isAuthenticated ? <ProfileSetup /> : <Navigate to="/login" />} />
+        <Route path="/profile-setup" element={<ProfileSetup />} />
 
         {/* Dashboard */}
-        <Route path="/home" element={isAuthenticated ? <HomePage /> : <Navigate to="/login" />} />
+        <Route path="/dashboard" element={<Dashboard />} />
 
         {/* Default */}
         <Route path="/" element={<Navigate to="/login" replace />} />

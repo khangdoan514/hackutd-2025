@@ -1,10 +1,11 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import "./Auth.css";
 import axios from "axios";
 
 const Login = () => {
   const [formData, setFormData] = useState({ email: "", password: "" });
+  const navigate = useNavigate();
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -17,14 +18,9 @@ const Login = () => {
       const response = await axios.post("http://localhost:3000/api/signin", formData);
       if (response.data.success) {
         console.log("Login successful");
-        const email = formData.email;
-        const password = formData.password;
-        // console("Email: " + email + ", password: " + password);
-        console.log("Login successful");
+        navigate("/profile-setup"); // Redirect to ProfileSetup
       }
-    }
-
-    catch (error) {
+    } catch (error) {
       console.log("Login failed:", error.response?.data?.message);
     }
   };
@@ -60,12 +56,12 @@ const Login = () => {
           </button>
 
           <div className="auth-links">
-            <Link to="/forgot-password" className="auth-link">
+            <a href="/forgot-password" className="auth-link">
               Forgot password?
-            </Link>
-            <Link to="/signup" className="auth-link">
+            </a>
+            <a href="/signup" className="auth-link">
               Create account
-            </Link>
+            </a>
           </div>
         </form>
       </div>

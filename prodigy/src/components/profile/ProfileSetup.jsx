@@ -11,8 +11,6 @@ const ProfileSetup = () => {
     birthday: "",
   });
 
-  // Comment :D
-
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
@@ -21,7 +19,7 @@ const ProfileSetup = () => {
   const handleSubmit = (e) => {
     e.preventDefault();
     console.log("Profile data:", formData);
-    navigate("/home");
+    navigate("/dashboard");
   };
 
   return (
