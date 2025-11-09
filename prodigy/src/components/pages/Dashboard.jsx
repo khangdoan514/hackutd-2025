@@ -13,12 +13,10 @@ const metrics = [
   {
     label: "Active sprints",
     value: "2",
-    detail: "Atlas closes in 5 days",
   },
   {
     label: "Issues in progress",
     value: "18",
-    detail: "+3 vs last sprint",
   },
 ];
 
@@ -26,14 +24,12 @@ const boardColumns = [
   {
     id: "backlog",
     title: "Backlog",
-    description: "Research, ideation, and intake",
     accent: "#8f6bff",
     tickets: [
       {
         key: "PRD-120",
         title: "Admin analytics: define KPIs for rollout",
         tags: ["Discovery", "Analytics"],
-        owner: "AL",
         priority: "low",
       },
       {
@@ -48,7 +44,6 @@ const boardColumns = [
   {
     id: "in-progress",
     title: "In Progress",
-    description: "Engineering focus this sprint",
     accent: "#4f8cff",
     tickets: [
       {
@@ -77,7 +72,6 @@ const boardColumns = [
   {
     id: "done",
     title: "Done",
-    description: "Shipped to production",
     accent: "#f5c451",
     tickets: [
       {
@@ -144,7 +138,7 @@ const Dashboard = () => {
           <span className="logo-mark">P</span>
           <div>
             <p className="logo-eyebrow">Prodigy</p>
-            <p className="logo-title">Team Workspace</p>
+            <p className="logo-title">Workspace</p>
           </div>
         </div>
 
@@ -168,13 +162,11 @@ const Dashboard = () => {
         <header className="dashboard-header">
           <div>
             <p className="eyebrow">Sprint // Atlas</p>
-            <h1>Prodigy Collaboration Board</h1>
-            <p className="subtitle">
-              Keep priorities aligned across product, design, and engineering.
-            </p>
+            <h1>Dash Board</h1>
+            
           </div>
           <div className="header-actions">
-            <button className="primary-button">New issue</button>
+            <button className="primary-button">Add issue</button>
           </div>
         </header>
 
@@ -216,16 +208,15 @@ const Dashboard = () => {
                         </span>
                       </div>
                       <p className="ticket-title">{ticket.title}</p>
-                      <div className="ticket-tags">
+                      {/*<div className="ticket-tags">
                         {ticket.tags.map((tag) => (
                           <span key={tag} className="chip">
                             {tag}
                           </span>
                         ))}
-                      </div>
+                      </div>*/}
+                      
                       <div className="ticket-footer">
-                        <span className="avatar">{ticket.owner}</span>
-                        <button className="ghost-button small">Handoff</button>
                       </div>
                     </article>
                   ))}
@@ -265,16 +256,16 @@ const Dashboard = () => {
               <p className="panel-title">Capacity planning</p>
               <ul>
                 <li>
-                  <span>Frontend guild</span>
+                  <span>Frontend Completion</span>
                   <strong>85%</strong>
                 </li>
                 <li>
-                  <span>Platform guild</span>
+                  <span>Backend Completion</span>
                   <strong>68%</strong>
                 </li>
                 <li>
-                  <span>Customer success</span>
-                  <strong>54%</strong>
+                  <span>Platform Completion</span>
+                  <strong>77%</strong>
                 </li>
               </ul>
             </div>

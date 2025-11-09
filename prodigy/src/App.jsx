@@ -8,6 +8,7 @@ import Signup from './components/auth/Signup'
 import ForgotPassword from './components/auth/ForgotPassword'
 import ProfileSetup from './components/profile/ProfileSetup'
 import Dashboard from './components/pages/Dashboard'
+import Calendar from './components/pages/Calendar'
 import './App.css'
 
 function App() {
@@ -60,6 +61,9 @@ function App() {
 
         {/* Dashboard */}
         <Route path="/dashboard" element={<Dashboard />} />
+
+        {/* Calendar */}
+        <Route path="/dashboard/calendar" element={<Calendar />} />
 
         {/* Default */}
         <Route path="/" element={<Navigate to="/login" replace />} />
