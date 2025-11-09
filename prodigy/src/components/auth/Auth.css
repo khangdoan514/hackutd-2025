@@ -1,9 +1,9 @@
-/* ===== Modern Prodigy Auth Styles ===== */
+/* ===== Modern Prodigy Auth Styles (Desktop Focused) ===== */
 
 body {
   margin: 0;
   font-family: "Inter", sans-serif;
-  background-color: #1b1d1f;
+  background-color: #1a1b1e;
   color: #e0e0e0;
   -webkit-font-smoothing: antialiased;
 }
@@ -13,22 +13,25 @@ body {
   display: flex;
   justify-content: center;
   align-items: center;
-  background: radial-gradient(circle at top left, #222428, #16181a);
+  background: radial-gradient(circle at top left, #1c1d20, #121316);
+  /* remove any unwanted shape layers */
+  background-attachment: fixed;
 }
 
 .auth-card {
-  background-color: #242628;
+  background-color: #1f2023;
   border-radius: 16px;
   padding: 3rem 3.5rem;
-  width: 450px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  width: 440px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.7);
+  /* Removed bright border that caused the “square” look */
+  border: 1px solid rgba(255, 255, 255, 0.03);
   transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
 .auth-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.7);
+  transform: translateY(-3px);
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.8);
 }
 
 .auth-title {
@@ -36,13 +39,13 @@ body {
   font-size: 2rem;
   font-weight: 700;
   color: #ffffff;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.4rem;
 }
 
 .auth-subtitle {
   text-align: center;
   font-size: 1rem;
-  color: #9ea0a3;
+  color: #a0a0a0;
   margin-bottom: 2rem;
 }
 
@@ -55,8 +58,8 @@ body {
 .form-input {
   width: 100%;
   padding: 14px 16px;
-  background-color: #2e3136;
-  border: 1px solid #3a3d42;
+  background-color: #2a2c30;
+  border: 1px solid #3b3e42;
   border-radius: 10px;
   color: #f5f5f5;
   font-size: 1rem;
@@ -69,8 +72,8 @@ body {
 
 .form-input:focus {
   border-color: #4f8cff;
-  background-color: #35383d;
-  box-shadow: 0 0 10px rgba(79, 140, 255, 0.2);
+  background-color: #303337;
+  box-shadow: 0 0 12px rgba(79, 140, 255, 0.25);
   outline: none;
 }
 
@@ -88,7 +91,7 @@ body {
 
 .auth-button:hover {
   background-color: #3a6de0;
-  box-shadow: 0 0 15px rgba(79, 140, 255, 0.4);
+  box-shadow: 0 0 18px rgba(79, 140, 255, 0.4);
   transform: translateY(-2px);
 }
 
