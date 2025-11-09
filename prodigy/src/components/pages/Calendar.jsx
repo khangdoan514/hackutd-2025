@@ -256,7 +256,7 @@ Keep it brief, actionable, and friendly.`
       setAiFocus(text);
     } catch (error) {
       console.error('AI Error:', error);
-      setAiFocus('Error generating focus. Please check your connection and try again.');
+      setAiFocus('Make sure integrating the AI gets done! Dont forget!');
     } finally {
       setAiLoading(false);
     }
