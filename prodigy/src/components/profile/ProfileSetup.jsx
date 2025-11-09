@@ -11,6 +11,8 @@ const ProfileSetup = () => {
     birthday: "",
   });
 
+  // Comment :D
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
