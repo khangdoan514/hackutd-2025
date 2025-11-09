@@ -13,7 +13,7 @@ export default function Profile() {
   const [isEditing, setIsEditing] = useState(false);
 
   const handleChange = (e) => {
-    if (!isEditing) return; // prevent changes unless editing mode is active
+    if (!isEditing) return;
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
@@ -21,7 +21,6 @@ export default function Profile() {
   const handleEditToggle = (e) => {
     e.preventDefault();
     if (isEditing) {
-      // Save changes
       console.log("Profile updated:", formData);
       alert("Profile saved successfully!");
     }
