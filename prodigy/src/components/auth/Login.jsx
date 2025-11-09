@@ -18,7 +18,7 @@ const Login = () => {
       const response = await axios.post("http://localhost:3000/api/signin", formData);
       if (response.data.success) {
         console.log("Login successful");
-        navigate("/profile-setup"); // Redirect to ProfileSetup
+        navigate("/profile-setup");
       }
     } catch (error) {
       console.log("Login failed:", error.response?.data?.message);
@@ -28,8 +28,8 @@ const Login = () => {
   return (
     <div className="auth-container">
       <div className="auth-card">
-        <h2 className="auth-title">Welcome</h2>
-        <p className="auth-subtitle">Sign in to your Prodigy workspace</p>
+        <h2 className="auth-title">Welcome to Prodigy!</h2>
+        <p className="auth-subtitle">Sign in to meet your project bestie</p>
 
         <form className="auth-form" onSubmit={handleSubmit}>
           <input

@@ -26,7 +26,7 @@ const ProfileSetup = () => {
     <div className="auth-container">
       <div className="auth-card">
         <h2 className="auth-title">Create Your Profile</h2>
-        <p className="auth-subtitle">Complete your setup to get started with Prodigy</p>
+        <p className="auth-subtitle">Tell us a bit about yourself!</p>
 
         <form className="auth-form" onSubmit={handleSubmit}>
           <input
@@ -66,8 +66,12 @@ const ProfileSetup = () => {
             <option value="Developer">Developer</option>
           </select>
 
+          <label className="form-label" htmlFor="birthday">
+            Enter your birthday
+          </label>
           <input
             type="date"
+            id="birthday"
             name="birthday"
             value={formData.birthday}
             onChange={handleChange}

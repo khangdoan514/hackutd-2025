@@ -1,22 +1,21 @@
-import { useState, useEffect } from 'react'
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
-import axios from "axios"
+import { useState, useEffect } from "react";
+import { BrowserRouter as Router, Routes, Route, Navigate, Outlet } from "react-router-dom";
+import axios from "axios";
 
 // Pages
-import Login from './components/auth/Login'
-import Signup from './components/auth/Signup'
-import ForgotPassword from './components/auth/ForgotPassword'
-import ProfileSetup from './components/profile/ProfileSetup'
-import Dashboard from './components/pages/Dashboard'
-import Calendar from './components/pages/Calendar'
-import './App.css'
+import Login from "./components/auth/Login";
+import Signup from "./components/auth/Signup";
+import ForgotPassword from "./components/auth/ForgotPassword";
+import ProfileSetup from "./components/profile/ProfileSetup";
+import Dashboard from "./components/pages/Dashboard";
+import Calendar from "./components/pages/Calendar";
+import "./App.css";
 
 function App() {
-  const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
-  // Example HomePage / Dashboard
   const HomePage = () => {
-    const [array, setArray] = useState([])
+    const [array, setArray] = useState([]);
 
     useEffect(() => {
       const fetchAPI = async () => {
@@ -26,7 +25,7 @@ function App() {
         } catch (error) {
           console.error("API fetch failed:", error);
         }
-      }
+      };
       fetchAPI();
     }, []);
 
@@ -44,32 +43,33 @@ function App() {
     );
   };
 
+  const DashboardLayout = () => (
+    <>
+      <Navbar />
+      <Outlet />
+    </>
+  );
+
   return (
     <Router>
       <Routes>
-        {/* Login */}
+        {/* Auth routes (no navbar) */}
         <Route path="/login" element={<Login setIsAuthenticated={setIsAuthenticated} />} />
-
-        {/* Signup */}
         <Route path="/signup" element={<Signup setIsAuthenticated={setIsAuthenticated} />} />
-
-        {/* Forgot Password */}
         <Route path="/forgot-password" element={<ForgotPassword />} />
-
-        {/* Profile Setup */}
         <Route path="/profile-setup" element={<ProfileSetup />} />
 
-        {/* Dashboard */}
-        <Route path="/dashboard" element={<Dashboard />} />
+        {/* Routes with Navbar */}
+        <Route element={<DashboardLayout />}>
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/dashboard/calendar" element={<Calendar />} />
+        </Route>
 
-        {/* Calendar */}
-        <Route path="/dashboard/calendar" element={<Calendar />} />
-
-        {/* Default */}
+        {/* Default redirect */}
         <Route path="/" element={<Navigate to="/login" replace />} />
       </Routes>
     </Router>
-  )
+  );
 }
 
-export default App
+export default App;
