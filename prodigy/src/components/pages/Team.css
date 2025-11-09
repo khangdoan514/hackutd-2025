@@ -12,13 +12,12 @@
   --accent-dim: #6d28d9;     /* deep purple */
   --track: #26263a;
   --success: #22c55e;
-  --warning: #f59e0b;
-  --danger: #ef4444;
+  --danger: #ef4444;         /* sprint red */
 }
 
 *{ box-sizing: border-box; }
 
-/* Layout grid matching the reference */
+/* Layout grid */
 .pp-shell{
   min-height:100vh;
   background: radial-gradient(1200px 600px at 80% -10%, rgba(139,92,246,0.12), transparent 60%), var(--bg);
@@ -140,9 +139,25 @@
   border-radius: 10px;
   background: #0f0f18;
   border: 1px solid transparent;
+  transition: background .2s ease, border-color .2s ease;
 }
 .cal-cell.faded{ opacity:.45; }
 .cal-cell.today{ border-color: var(--accent); box-shadow: inset 0 0 0 2px rgba(139,92,246,.35); }
+/* Sprint highlight (red) */
+.cal-cell.sprint{ 
+  background: rgba(239,68,68,0.18);
+  border-color: rgba(239,68,68,0.55);
+}
+.cal-cell.sprint.today{
+  background: rgba(239,68,68,0.28);
+  box-shadow: inset 0 0 0 2px rgba(239,68,68,.6);
+}
+
+/* Legend */
+.legend{ margin-top:8px; display:flex; align-items:center; gap:16px; color: var(--muted); font-size:12px; }
+.legend-chip{ width:14px; height:14px; border-radius:6px; display:inline-block; border:1px solid var(--border); margin-right:6px; }
+.legend-chip.sprint{ background: rgba(239,68,68,0.18); border-color: rgba(239,68,68,0.55); }
+.legend-chip.today{ background: rgba(139,92,246,0.25); border-color: rgba(139,92,246,0.65); }
 
 /* Team */
 .pp-team{ grid-column: 3 / 4; grid-row: 1 / 3; }

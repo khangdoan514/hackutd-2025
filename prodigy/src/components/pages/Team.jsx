@@ -1,21 +1,28 @@
 import React, { useMemo, useState } from "react";
 import "./Team.css";
 
-
 /**
  * PMBlackPurpleHub.jsx
  * --------------------------------------------------
- * A dark (black & purple) product management hub inspired by the screenshot:
- * - Overall Progress gauge (conic-gradient semi-donut)
- * - Mini calendar (current month, simple nav)
- * - Team members list with online badge + Message button
- * - Deadlines list with quick "Complete" action
+ * Black & purple PM hub with:
+ * - Overall Progress gauge
+ * - Calendar with **red sprint highlighting** (current sprint window)
+ * - Team members list
+ * - Deadlines list with Complete
  * - Create Poll button
- * 
- * All data is mock; swap with your API.
+ *
+ * Change the sprint config below to match your cadence.
  */
 
 export default function PMBlackPurpleHub() {
+  // ----------- Sprint config -----------
+  // Anchor: the start of your sprint cycle (e.g., a Monday when the cycle began).
+  const sprintAnchor = new Date(2025, 0, 6); // Jan 6, 2025 (Monday) — change as needed
+  const sprintLengthDays = 14;               // typical two‑week sprint
+  // Which sprint window to color? "current" colors only the sprint that contains 'today'.
+  // You can switch to "rolling" to color the sprint that intersects the visible month.
+  const sprintMode = "current"; // "current" | "rolling"
+
   // -------- Mock Data --------
   const progress = 72; // overall percent
   const team = useMemo(
@@ -43,8 +50,14 @@ export default function PMBlackPurpleHub() {
   }
 
   // -------- Calendar helpers --------
-  const today = new Date();
+  const today = stripTime(new Date());
   const [activeDate, setActiveDate] = useState(new Date(today.getFullYear(), today.getMonth(), 1));
+
+  // Compute the sprint window to highlight
+  const { currentSprintStart, currentSprintEnd } = useMemo(() => {
+    const { start, end } = sprintWindowForDate(sprintAnchor, sprintLengthDays, today);
+    return { currentSprintStart: start, currentSprintEnd: end };
+  }, [sprintAnchor, sprintLengthDays, today]);
 
   const { monthName, daysGrid } = useMemo(() => {
     const m = activeDate.getMonth();
@@ -57,19 +70,45 @@ export default function PMBlackPurpleHub() {
     const prevMonthDays = new Date(y, m, 0).getDate();
 
     const cells = [];
+
+    // Decide which sprint window to display for coloring
+    let sprintStart = currentSprintStart;
+    let sprintEnd = currentSprintEnd;
+    if (sprintMode === "rolling") {
+      // choose sprint window that overlaps the visible first-of-month
+      const visRef = stripTime(new Date(y, m, 1));
+      const w = sprintWindowForDate(sprintAnchor, sprintLengthDays, visRef);
+      sprintStart = w.start; sprintEnd = w.end;
+    }
+
+    // leading cells (previous month)
     for (let i = 0; i < startDay; i++) {
-      cells.push({ key: "p" + i, day: prevMonthDays - (startDay - 1 - i), faded: true });
+      const day = prevMonthDays - (startDay - 1 - i);
+      const date = stripTime(new Date(y, m - 1, day));
+      cells.push({ key: "p" + i, date, day, faded: true, today: isSameDate(date, today), sprint: inRange(date, sprintStart, sprintEnd) });
     }
+    // month days
     for (let d = 1; d <= daysInMonth; d++) {
-      const isToday = y === today.getFullYear() && m === today.getMonth() && d === today.getDate();
-      cells.push({ key: "d" + d, day: d, today: isToday });
+      const date = stripTime(new Date(y, m, d));
+      cells.push({ key: "d" + d, date, day: d, today: isSameDate(date, today), sprint: inRange(date, sprintStart, sprintEnd) });
     }
+    // trailing to fill to end of week
     while (cells.length % 7 !== 0) {
-      cells.push({ key: "n" + cells.length, day: cells.length % 30 || 30, faded: true });
+      const idx = cells.length;
+      const day = (idx % 31) + 1;
+      const date = stripTime(new Date(y, m + 1, day));
+      cells.push({ key: "n" + idx, date, day, faded: true, today: isSameDate(date, today), sprint: inRange(date, sprintStart, sprintEnd) });
     }
-    while (cells.length < 42) cells.push({ key: "x" + cells.length, day: (cells.length % 30) + 1, faded: true });
+    // ensure 6 rows (42 cells)
+    while (cells.length < 42) {
+      const idx = cells.length;
+      const day = (idx % 31) + 1;
+      const date = stripTime(new Date(y, m + 1, day));
+      cells.push({ key: "x" + idx, date, day, faded: true, today: isSameDate(date, today), sprint: inRange(date, sprintStart, sprintEnd) });
+    }
+
     return { monthName, daysGrid: cells };
-  }, [activeDate]);
+  }, [activeDate, currentSprintStart, currentSprintEnd, sprintAnchor, sprintLengthDays, sprintMode, today]);
 
   function addMonths(n) {
     const d = new Date(activeDate);
@@ -97,7 +136,6 @@ export default function PMBlackPurpleHub() {
             <div className="eyebrow">Overall Progress</div>
             <div className="meta">tasks completed vs total</div>
           </div>
-          <div><button className="btn pill">All ▾</button></div>
         </header>
 
         <div className="gauge">
@@ -132,10 +170,18 @@ export default function PMBlackPurpleHub() {
             <div key={d} className="cal-dow muted">{d}</div>
           ))}
           {daysGrid.map((c) => (
-            <div key={c.key} className={`cal-cell ${c.faded ? "faded" : ""} ${c.today ? "today" : ""}`}>
+            <div
+              key={c.key}
+              className={`cal-cell ${c.faded ? "faded" : ""} ${c.today ? "today" : ""} ${c.sprint ? "sprint" : ""}`}
+              title={c.date.toDateString()}
+            >
               {c.day}
             </div>
           ))}
+        </div>
+        <div className="legend">
+          <span className="legend-chip sprint" /> Sprint window
+          <span className="legend-chip today" /> Today
         </div>
       </section>
 
@@ -187,4 +233,30 @@ export default function PMBlackPurpleHub() {
       </section>
     </div>
   );
+}
+
+/* ===== Date helpers / sprint logic ===== */
+function stripTime(d){
+  const x = new Date(d);
+  x.setHours(0,0,0,0);
+  return x;
+}
+function diffDays(a,b){
+  const ms = stripTime(a).getTime() - stripTime(b).getTime();
+  return Math.round(ms/86400000);
+}
+function isSameDate(a,b){ return stripTime(a).getTime() === stripTime(b).getTime(); }
+function inRange(d, start, end){ return stripTime(d) >= stripTime(start) && stripTime(d) <= stripTime(end); }
+
+/** Returns {start, end} sprint window for a reference date. */
+function sprintWindowForDate(anchor, lengthDays, refDate){
+  const a = stripTime(anchor);
+  const r = stripTime(refDate);
+  const daysSinceAnchor = diffDays(r, a);
+  const cycles = Math.floor(daysSinceAnchor / lengthDays);
+  const start = new Date(a);
+  start.setDate(a.getDate() + cycles * lengthDays);
+  const end = new Date(start);
+  end.setDate(start.getDate() + lengthDays - 1);
+  return { start: stripTime(start), end: stripTime(end) };
 }
