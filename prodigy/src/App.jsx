@@ -45,7 +45,7 @@ function App() {
 
   const DashboardLayout = () => (
     <>
-      <Navbar />
+      
       <Outlet />
     </>
   );
