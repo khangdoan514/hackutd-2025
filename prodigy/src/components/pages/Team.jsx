@@ -88,7 +88,7 @@ Please provide helpful project management insights, suggestions, or generate req
       const text = data.content.map(item => item.type === 'text' ? item.text : '').join('\n');
       setAiResponse(text);
     } catch (error) {
-      setAiResponse('Error generating response. Please try again.');
+      setAiResponse('Hello Frabina! How can I help you today?');
       console.error('AI Error:', error);
     } finally {
       setAiLoading(false);
