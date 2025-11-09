@@ -107,15 +107,12 @@ export default function Dashboard() {
 
   <div className="updates-list">
     <div className="update-card">
-      <span className="emoji">🌟</span>
       <p><strong>UI Team:</strong> Sprint board redesign completed.</p>
     </div>
     <div className="update-card">
-      <span className="emoji">🛠️</span>
       <p><strong>Backend Team:</strong> API connection tested successfully.</p>
     </div>
     <div className="update-card">
-      <span className="emoji">📦</span>
       <p><strong>Frontend Team:</strong> Scheduled for next Monday.</p>
     </div>
   </div>

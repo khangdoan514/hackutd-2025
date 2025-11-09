@@ -1,19 +1,15 @@
 :root {
   --bg: #181818;
   --card: #222024;
-  --text-primary: #F5F6F9;
+  --text-primary: #f9f5f5;
   --text-secondary: #B4B6C2;
   --border: rgba(255, 255, 255, 0.05);
   --shadow-soft: 0 4px 12px rgba(0, 0, 0, 0.3);
-  --accent-gradient: linear-gradient(90deg, #8A7CF4, #E273B5);
-  --accent: #A77BF3;
-  --success: #45DAB1;
-  --warning: #E9C46A;
-  --info: #4FA8F3;
-  --danger: #E76F51;
+  --accent: #8A7CF4;
+  --progress-gradient: linear-gradient(90deg, #393461, #8A7CF4);
+  --accent-gradient: linear-gradient(90deg, #8A7CF4, #757374);
 }
 
-/* 🌍 Dashboard layout */
 .dashboard-stats {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
@@ -21,7 +17,6 @@
   margin-top: 1.5rem;
 }
 
-/* 📊 Metric Cards */
 .metric-card {
   background: var(--card);
   border-radius: 1rem;
@@ -58,15 +53,17 @@
   background: var(--accent-gradient);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
+  background-clip: text;
+  color: var(--accent);
   margin: 0.3rem 0;
 }
+
 
 .metric-label {
   font-size: 0.9rem;
   color: var(--text-secondary);
 }
 
-/* 📈 Progress Bar */
 .progress-bar {
   height: 6px;
   width: 100%;
@@ -77,14 +74,13 @@
 }
 .progress-bar-fill {
   height: 100%;
-  background: var(--accent-gradient);
+  background: var(--progress-gradient);
   border-radius: 3px;
 }
 
-/* 🏷️ Tag / Assignee */
 .tag {
   background: rgba(255, 255, 255, 0.07);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(220, 72, 72, 0.1);
   color: var(--text-secondary);
   font-size: 0.75rem;
   padding: 0.2rem 0.6rem;
@@ -92,7 +88,6 @@
   display: inline-block;
 }
 
-/* 🧱 Kanban Columns */
 .board-scroll {
   display: flex;
   gap: 1rem;
@@ -136,7 +131,6 @@
   background: var(--success);
 }
 
-/* 🎫 Task Cards */
 .ticket-card {
   background: #272528;
   border-radius: 0.8rem;
@@ -148,7 +142,7 @@
 }
 .ticket-card:hover {
   transform: translateY(-3px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
+  box-shadow: var(--shadow-soft);
 }
 .ticket-title {
   font-weight: 600;
@@ -163,7 +157,6 @@
   margin-bottom: 0.4rem;
 }
 
-/* 🌈 Priority Tags */
 .priority-tag {
   font-weight: 600;
   padding: 0.2rem 0.6rem;
@@ -181,7 +174,6 @@
   background: var(--danger);
 }
 
-/* 📰 Team Updates (Reworked) */
 .team-updates {
   background: var(--card);
   border-radius: 1rem;
@@ -241,4 +233,16 @@ transition: background 0.2s ease, transform 0.2s ease;
 }
 .update-card strong {
   color: var(--accent);
+}
+
+.chip {
+  display: inline-block;
+  padding: 0.2rem 0.5rem;
+  font-size: 0.7rem;
+  font-weight: 500;
+  text-transform: capitalize;
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 999px;
+  color: var(--text-secondary);
 }
