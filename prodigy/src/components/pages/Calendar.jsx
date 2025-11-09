@@ -149,11 +149,8 @@ const Calendar = () => {
     <div className="calendar-page">
       <header className="calendar-header">
         <div>
-          <p className="eyebrow">Sprint // Atlas</p>
           <h1>Schedule</h1>
-          <p className="muted">
-            Track milestone owners and see what is landing on each day.
-          </p>
+          
         </div>
 
         <div className="calendar-controls">
