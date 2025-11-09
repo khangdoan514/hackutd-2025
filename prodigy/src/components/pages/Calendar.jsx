@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import "./Calendar.css";
-import { ChevronLeft, ChevronRight, Plus, Sparkles, Clock, User, Tag, AlertCircle } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Plus, Sparkles, Clock, User, Tag, AlertCircle, Edit2, Trash2 } from 'lucide-react';
+import TaskModal from './TaskModal';
 
 const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
@@ -92,9 +93,15 @@ const statusCopy = {
   planned: "Planned",
   "at-risk": "At risk",
   completed: "Completed",
+  "backlog": "Backlog",
+  "in-progress": "In Progress",
+  "done": "Done",
 };
 
 const formatDateKey = (date) => {
+  if (typeof date === 'string') {
+    return date; // Already formatted
+  }
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, "0");
   const day = String(date.getDate()).padStart(2, "0");
@@ -114,23 +121,29 @@ const buildCalendarGrid = (month) => {
 };
 
 const Calendar = () => {
-  const today = useMemo(() => new Date(), []);
+  const today = useMemo(() => {
+    const now = new Date();
+    return new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  }, []);
   const [currentMonth, setCurrentMonth] = useState(
     new Date(today.getFullYear(), today.getMonth(), 1)
   );
   const [selectedDate, setSelectedDate] = useState(today);
   const [aiLoading, setAiLoading] = useState(false);
   const [aiFocus, setAiFocus] = useState("");
+  const [tasks, setTasks] = useState(taskSeed);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingTask, setEditingTask] = useState(null);
 
   const tasksByDate = useMemo(() => {
-    return taskSeed.reduce((result, task) => {
+    return tasks.reduce((result, task) => {
       if (!result[task.date]) {
         result[task.date] = [];
       }
       result[task.date].push(task);
       return result;
     }, {});
-  }, []);
+  }, [tasks]);
 
   const daysInView = useMemo(
     () => buildCalendarGrid(currentMonth),
@@ -142,11 +155,49 @@ const Calendar = () => {
 
   const upcomingTasks = useMemo(() => {
     const todayKey = formatDateKey(today);
-    return taskSeed
-      .filter((task) => task.date >= todayKey)
-      .sort((a, b) => (a.date > b.date ? 1 : -1))
+    return tasks
+      .filter((task) => {
+        const taskDate = new Date(task.date);
+        const localTaskDate = new Date(taskDate.getFullYear(), taskDate.getMonth(), taskDate.getDate());
+        const localToday = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+        return localTaskDate >= localToday; // Include today and future dates
+      })
+      .sort((a, b) => {
+        // Sort by date, then by time
+        if (a.date !== b.date) {
+          return a.date > b.date ? 1 : -1;
+        }
+        // If same date, sort by time
+        return a.time > b.time ? 1 : -1;
+      })
       .slice(0, 5);
-  }, [today]);
+  }, [today, tasks]);
+
+  // Calculate overview statistics
+  const { tasksCompletedThisWeek, highPriorityTasks, upcomingDeadlines } = useMemo(() => {
+    const todayKey = formatDateKey(today);
+    const startOfWeek = new Date(today);
+    startOfWeek.setDate(today.getDate() - today.getDay());
+    const endOfWeek = new Date(startOfWeek);
+    endOfWeek.setDate(startOfWeek.getDate() + 6);
+
+    const tasksCompletedThisWeek = tasks.filter(t => {
+      const taskDate = new Date(t.date);
+      const localTaskDate = new Date(taskDate.getFullYear(), taskDate.getMonth(), taskDate.getDate());
+      return t.status === 'completed' && localTaskDate >= startOfWeek && localTaskDate <= endOfWeek;
+    }).length;
+
+    const highPriorityTasks = tasks.filter(t => t.priority === 'high').length;
+    
+    const upcomingDeadlines = tasks.filter(t => {
+      const taskDate = new Date(t.date);
+      const localTaskDate = new Date(taskDate.getFullYear(), taskDate.getMonth(), taskDate.getDate());
+      const localToday = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+      return localTaskDate >= localToday; // Include today
+    }).length;
+
+    return { tasksCompletedThisWeek, highPriorityTasks, upcomingDeadlines };
+  }, [tasks, today]);
 
   const handleGenerateAIFocus = async () => {
     setAiLoading(true);
@@ -220,27 +271,69 @@ Keep it brief, actionable, and friendly.`
   };
 
   const handleDaySelect = (day) => {
-    setSelectedDate(new Date(day));
+    // Use the exact date from the calendar grid without timezone conversion
+    const selected = new Date(day);
+    // Reset time to avoid timezone issues
+    const localDate = new Date(selected.getFullYear(), selected.getMonth(), selected.getDate());
+    setSelectedDate(localDate);
     setAiFocus("");
+  };
+
+  const handleCreateTask = () => {
+    // Set default date to selected date (fixed for timezone)
+    const defaultDate = formatDateKey(selectedDate);
+    setEditingTask({
+      title: '',
+      description: '',
+      date: defaultDate,
+      time: '09:00',
+      owner: 'Product',
+      category: 'Meeting',
+      priority: 'medium',
+      status: 'backlog'
+    });
+    setIsModalOpen(true);
+  };
+
+  const handleEditTask = (task) => {
+    setEditingTask(task);
+    setIsModalOpen(true);
+  };
+
+  const handleDeleteTask = (taskId) => {
+    if (window.confirm('Are you sure you want to delete this task?')) {
+      setTasks(prev => prev.filter(task => task.id !== taskId));
+    }
+  };
+
+  const handleSaveTask = (taskData) => {
+    if (editingTask && editingTask.id) {
+      // Update existing task
+      setTasks(prev => prev.map(task => 
+        task.id === editingTask.id ? { ...taskData, id: editingTask.id } : task
+      ));
+    } else {
+      // Create new task
+      const newTask = {
+        ...taskData,
+        id: `task-${Date.now()}`,
+      };
+      setTasks(prev => [...prev, newTask]);
+      
+      // If the task date is different from selected date, select that date
+      if (taskData.date !== selectedKey) {
+        const taskDate = new Date(taskData.date);
+        const localTaskDate = new Date(taskDate.getFullYear(), taskDate.getMonth(), taskDate.getDate());
+        setSelectedDate(localTaskDate);
+        setCurrentMonth(new Date(localTaskDate.getFullYear(), localTaskDate.getMonth(), 1));
+      }
+    }
   };
 
   const monthLabel = currentMonth.toLocaleString("default", {
     month: "long",
     year: "numeric",
   });
-
-  const startOfWeek = new Date(today);
-  startOfWeek.setDate(today.getDate() - today.getDay());
-  const endOfWeek = new Date(startOfWeek);
-  endOfWeek.setDate(startOfWeek.getDate() + 6);
-
-  const tasksCompletedThisWeek = taskSeed.filter(t => {
-    const taskDate = new Date(t.date);
-    return t.status === 'completed' && taskDate >= startOfWeek && taskDate <= endOfWeek;
-  }).length;
-
-  const highPriorityTasks = taskSeed.filter(t => t.priority === 'high').length;
-  const upcomingDeadlines = taskSeed.filter(t => new Date(t.date) >= today).length;
 
   return (
     <div className="calendar-page">
@@ -251,7 +344,7 @@ Keep it brief, actionable, and friendly.`
           <p className="subtitle">Manage your team's timeline and deliverables</p>
         </div>
         <div className="header-actions">
-          <button type="button" className="btn-secondary">
+          <button type="button" className="btn-secondary" onClick={handleCreateTask}>
             <Plus />
             Add Event
           </button>
@@ -290,9 +383,11 @@ Keep it brief, actionable, and friendly.`
 
           <div className="calendar-grid">
             {daysInView.map((day) => {
-              const key = formatDateKey(day);
+              // Create a local date without timezone issues
+              const localDay = new Date(day.getFullYear(), day.getMonth(), day.getDate());
+              const key = formatDateKey(localDay);
               const tasksForDay = tasksByDate[key] || [];
-              const isOutside = day.getMonth() !== currentMonth.getMonth() || day.getFullYear() !== currentMonth.getFullYear();
+              const isOutside = day.getMonth() !== currentMonth.getMonth();
               const isToday = formatDateKey(today) === key;
               const isSelected = selectedKey === key;
 
@@ -308,7 +403,7 @@ Keep it brief, actionable, and friendly.`
                   type="button"
                   key={key}
                   className={dayClasses}
-                  onClick={() => handleDaySelect(day)}
+                  onClick={() => handleDaySelect(localDay)}
                 >
                   <span className="day-number">{day.getDate()}</span>
                   <div className="day-tasks">
@@ -330,19 +425,18 @@ Keep it brief, actionable, and friendly.`
             })}
           </div>
 
-          {}
           <div className="tasks-card highlights-card">
             <h3 className="panel-title">Overview</h3>
             <ul className="highlights-list">
               <li>Tasks Completed This Week: {tasksCompletedThisWeek}</li>
               <li>High-Priority Tasks: {highPriorityTasks}</li>
               <li>Upcoming Deadlines: {upcomingDeadlines}</li>
+              <li>Total Tasks: {tasks.length}</li>
             </ul>
           </div>
         </div>
 
         <aside className="calendar-sidebar">
-          {}
           <div className="ai-focus-card">
             <div className="ai-focus-header">
               <div className="ai-focus-title">
@@ -392,7 +486,7 @@ Keep it brief, actionable, and friendly.`
                 <div className="empty-state-block">
                   <AlertCircle className="empty-icon" />
                   <p>Nothing scheduled for this day</p>
-                  <button className="btn-link">
+                  <button className="btn-link" onClick={handleCreateTask}>
                     <Plus className="btn-link-icon" />
                     Add a task
                   </button>
@@ -421,7 +515,25 @@ Keep it brief, actionable, and friendly.`
                       </div>
                     </div>
                   </div>
-                  <span className={`status-pill ${task.status}`}>{statusCopy[task.status]}</span>
+                  <div className="task-actions">
+                    <span className={`status-pill ${task.status}`}>{statusCopy[task.status]}</span>
+                    <div className="action-buttons">
+                      <button 
+                        type="button" 
+                        className="action-btn edit-btn"
+                        onClick={() => handleEditTask(task)}
+                      >
+                        <Edit2 size={14} />
+                      </button>
+                      <button 
+                        type="button" 
+                        className="action-btn delete-btn"
+                        onClick={() => handleDeleteTask(task.id)}
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    </div>
+                  </div>
                 </article>
               ))}
             </div>
@@ -431,24 +543,38 @@ Keep it brief, actionable, and friendly.`
           <div className="tasks-card compact">
             <h3 className="panel-title">Upcoming Focus</h3>
             <ul className="upcoming-list">
-              {upcomingTasks.map((task) => (
-                <li key={`upcoming-${task.id}`}>
-                  <div className="upcoming-task-info">
-                    <div className={`status-dot ${task.status}`} />
-                    <div>
-                      <p className="task-title">{task.title}</p>
-                      <p className="task-meta">
-                        {new Date(task.date).toLocaleDateString('default', { month: 'short', day: 'numeric' })} • {task.time}
-                      </p>
+              {upcomingTasks.length === 0 ? (
+                <div className="empty-state-block">
+                  <AlertCircle className="empty-icon" />
+                  <p>No upcoming tasks</p>
+                </div>
+              ) : (
+                upcomingTasks.map((task) => (
+                  <li key={`upcoming-${task.id}`}>
+                    <div className="upcoming-task-info">
+                      <div className={`status-dot ${task.status}`} />
+                      <div>
+                        <p className="task-title">{task.title}</p>
+                        <p className="task-meta">
+                          {new Date(task.date).toLocaleDateString('default', { month: 'short', day: 'numeric' })} • {task.time}
+                        </p>
+                      </div>
                     </div>
-                  </div>
-                  <span className={`priority-badge priority-${task.priority}`}>{task.priority}</span>
-                </li>
-              ))}
+                    <span className={`priority-badge priority-${task.priority}`}>{task.priority}</span>
+                  </li>
+                ))
+              )}
             </ul>
           </div>
         </aside>
       </section>
+
+      <TaskModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onSave={handleSaveTask}
+        task={editingTask}
+      />
     </div>
   );
 };
