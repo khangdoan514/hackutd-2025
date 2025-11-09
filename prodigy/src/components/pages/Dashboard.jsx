@@ -52,7 +52,7 @@ export default function Dashboard() {
           </div>
         </header>
 
-        {/* 📊 Metric Cards */}
+        {/* Metric Cards */}
         <section className="dashboard-stats">
           <div className="metric-card">
             <div className="metric-header">
@@ -91,7 +91,7 @@ export default function Dashboard() {
 
         </section>
 
-        {/* 📋 Task Board */}
+        {/* Task Board */}
         <section className="board-section">
           <div className="section-header">
             <h2>Sprint Board</h2>

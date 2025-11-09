@@ -98,6 +98,117 @@ const statusCopy = {
   "done": "Done",
 };
 
+// Pre-generated AI focus content for the next 5 days
+const aiFocusContent = {
+  "2025-11-07": `Daily Focus: Kick off the sprint with clear planning and align the team on priorities.
+
+Prioritization:
+- Top: Sprint planning sync (critical for setting week's direction)
+- Second: Review any carry-over tasks from previous sprint
+- Time-sensitive: Morning sync at 9:00 AM sets the day's rhythm
+
+Insights:
+- Use the planning session to identify potential blockers early
+- Allocate buffer time for unexpected discussions
+- Schedule follow-up actions immediately after the meeting`,
+
+  "2025-11-08": `Daily Focus: Refine the user onboarding experience through collaborative design review.
+
+Prioritization:
+- Top: Design review at 1:30 PM (key user-facing feature)
+- Second: Prepare feedback documentation for design team
+- Time-sensitive: Afternoon review session requires prep work
+
+Insights:
+- Gather user feedback data before the meeting
+- Coordinate with engineering on feasibility constraints
+- Document decisions clearly for future reference`,
+
+  "2025-11-09": `Daily Focus: Drive progress on AI Integration while managing the at-risk status.
+
+Prioritization:
+- Top: AI Integration work (high priority, at-risk status)
+- Second: Monitor integration progress and identify blockers
+- Time-sensitive: Late afternoon focus session at 4:00 PM
+
+Insights:
+- Break down the integration into smaller, testable components
+- Schedule checkpoints to track progress throughout the day
+- Prepare contingency plans for potential technical hurdles`,
+
+  "2025-11-10": `Daily Focus: Execute dashboard release while maintaining quality standards.
+
+Prioritization:
+- Top: Dashboard release at 11:00 AM (team deliverable)
+- Second: Front-end updates in the afternoon
+- Time-sensitive: Morning release requires full team attention
+
+Insights:
+- Coordinate closely with QA team during release process
+- Schedule the customer research task when creative energy is high
+- Prepare rollback plan in case of release issues`,
+
+  "2025-11-11": `Daily Focus: Strategic planning and team alignment day.
+
+Prioritization:
+- Top: Review week's progress and adjust priorities
+- Second: Plan for upcoming content review and team retrospective
+- Time-sensitive: Use this lighter day for strategic thinking
+
+Insights:
+- Good day for catching up on documentation and process improvements
+- Schedule 1:1 meetings with team members if needed
+- Prepare materials for tomorrow's progress update`,
+
+  "2025-11-12": `Daily Focus: Communication and progress tracking with stakeholders.
+
+Prioritization:
+- Top: Progress Update at 5:30 PM (stakeholder communication)
+- Second: Prepare comprehensive update materials
+- Time-sensitive: End-of-day presentation requires thorough prep
+
+Insights:
+- Gather metrics and success stories throughout the day
+- Practice key talking points for the update
+- Schedule buffer time before the meeting for final preparations`,
+
+  "2025-11-13": `Daily Focus: Quality assurance and content validation.
+
+Prioritization:
+- Top: Content Review at 10:30 AM (compliance critical)
+- Second: Security audit preparations
+- Time-sensitive: Morning review requires fresh attention
+
+Insights:
+- Review materials with security checklist in mind
+- Coordinate with legal/compliance team if needed
+- Document review outcomes for audit trail`,
+
+  "2025-11-14": `Daily Focus: Preparation and refinement for team retrospective.
+
+Prioritization:
+- Top: Gather feedback and insights for retrospective
+- Second: Analyze team velocity and process effectiveness
+- Time-sensitive: Use today to gather comprehensive feedback
+
+Insights:
+- Create safe space for honest team feedback
+- Focus on process improvements rather than individual performance
+- Prepare action items for implementation next week`,
+
+  "2025-11-15": `Daily Focus: Team reflection and continuous improvement.
+
+Prioritization:
+- Top: Team retrospective at 3:00 PM (team health)
+- Second: Implement quick wins from retrospective insights
+- Time-sensitive: Afternoon session sets tone for next sprint
+
+Insights:
+- Facilitate open discussion about what worked and what didn't
+- Focus on actionable improvements rather than complaints
+- End with clear ownership of action items`
+};
+
 const formatDateKey = (date) => {
   if (typeof date === 'string') {
     return date; // Already formatted
@@ -199,67 +310,33 @@ const Calendar = () => {
     return { tasksCompletedThisWeek, highPriorityTasks, upcomingDeadlines };
   }, [tasks, today]);
 
-  const handleGenerateAIFocus = async () => {
+  const handleGenerateAIFocus = () => {
     setAiLoading(true);
-    setAiFocus("");
+    
+    // Simulate AI processing delay
+    setTimeout(() => {
+      if (aiFocusContent[selectedKey]) {
+        setAiFocus(aiFocusContent[selectedKey]);
+      } else {
+        // Generate generic focus for days without pre-defined content
+        const taskTitles = selectedTasks.map(task => task.title).join(', ');
+        const focus = `Daily Focus: Maximize productivity by focusing on your scheduled tasks: ${taskTitles}
 
-    try {
-      const response = await fetch('https://api.anthropic.com/v1/messages', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          model: 'claude-sonnet-4-20250514',
-          max_tokens: 500,
-          messages: [{
-            role: 'user',
-            content: `You are a productivity AI assistant helping a team manage their schedule. Analyze the following tasks for ${selectedKey}:
+                      Prioritization:
+                      - Top priority: ${selectedTasks.find(t => t.priority === 'high')?.title || selectedTasks[0]?.title || 'Review scheduled tasks'}
+                      - Secondary: ${selectedTasks.find(t => t.priority === 'medium')?.title || selectedTasks[1]?.title || 'Team coordination'}
+                      - Time-sensitive: Complete high-priority items first
 
-${selectedTasks.length > 0 ? selectedTasks.map(t => `• ${t.title}
-  Time: ${t.time}
-  Owner: ${t.owner}
-  Priority: ${t.priority}
-  Status: ${t.status}
-  Category: ${t.category}`).join('\n\n') : 'No tasks scheduled'}
-
-Provide a concise daily focus guide:
-
-Daily Focus: (One clear sentence about what matters most today)
-
-Prioritization:
-- (Top priority task and why)
-- (Second focus area)
-- (Any time-sensitive items)
-
-Insights:
-- (Any scheduling conflicts or suggestions)
-- (Recommended approach for the day)
-
-Keep it brief, actionable, and friendly.`
-          }]
-        })
-      });
-
-      if (!response.ok) throw new Error(`API request failed: ${response.status}`);
-
-      const data = await response.json();
-      
-      let text = '';
-      if (data.content && Array.isArray(data.content)) {
-        text = data.content
-          .filter(item => item.type === 'text')
-          .map(item => item.text)
-          .join('\n');
+                      Insights:
+                      - Balance focused work sessions with necessary collaboration
+                      - Schedule breaks to maintain energy throughout the day
+                      - Document progress and any blockers for future reference
+                      - Coordinate with team members on dependent tasks`;
+        
+        setAiFocus(focus);
       }
-      
-      if (!text) throw new Error('No response text received');
-      
-      setAiFocus(text);
-    } catch (error) {
-      console.error('AI Error:', error);
-      setAiFocus('Error generating focus. Please check your connection and try again.');
-    } finally {
       setAiLoading(false);
-    }
+    }, 800);
   };
 
   const handleMonthChange = (offset) => {
@@ -276,7 +353,7 @@ Keep it brief, actionable, and friendly.`
     // Reset time to avoid timezone issues
     const localDate = new Date(selected.getFullYear(), selected.getMonth(), selected.getDate());
     setSelectedDate(localDate);
-    setAiFocus("");
+    setAiFocus(""); // Clear previous AI focus when selecting new day
   };
 
   const handleCreateTask = () => {
