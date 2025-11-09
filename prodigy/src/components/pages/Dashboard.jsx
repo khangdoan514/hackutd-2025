@@ -3,10 +3,10 @@ import axios from "axios";
 import "./Dashboard.css";
 
 const navShortcuts = [
-  { label: "Board", active: true },
-  { label: "Timeline" },
-  { label: "Backlog" },
-  { label: "Reports" },
+  { label: "Dashboard", active: true },
+  { label: "Calendar" },
+  { label: "Teams" },
+  
 ];
 
 const metrics = [
