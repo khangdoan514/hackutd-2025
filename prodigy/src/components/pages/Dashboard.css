@@ -4,6 +4,7 @@
   --card: #232732;
   --border: rgba(255, 255, 255, 0.05);
   --accent: #4f8cff;
+  --complimentary: #7a5cff;
   --text-primary: #f5f7ff;
   --text-muted: #a0a7b8;
   --shadow-soft: 0 15px 45px rgba(0, 0, 0, 0.45);
@@ -38,7 +39,7 @@
   width: 40px;
   height: 40px;
   border-radius: 12px;
-  background: linear-gradient(135deg, #4f8cff, #7a5cff);
+  background: linear-gradient(135deg, #ff4f4f, #7a5cff);
   display: inline-flex;
   align-items: center;
   justify-content: center;

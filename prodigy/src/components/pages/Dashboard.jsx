@@ -3,9 +3,12 @@ import axios from "axios";
 import "./Dashboard.css";
 
 const navShortcuts = [
+ 
   { label: "Dashboard", active: true },
   { label: "Calendar" },
   { label: "Teams" },
+  
+
   
 ];
 
