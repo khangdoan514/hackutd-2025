@@ -20,11 +20,6 @@ const metrics = [
     value: "18",
     detail: "+3 vs last sprint",
   },
-  {
-    label: "Blocked items",
-    value: "4",
-    detail: "Escalated to platform team",
-  },
 ];
 
 const boardColumns = [
@@ -76,28 +71,6 @@ const boardColumns = [
         tags: ["Performance"],
         owner: "CV",
         priority: "medium",
-      },
-    ],
-  },
-  {
-    id: "qa",
-    title: "Review & QA",
-    description: "Ready for demo or verification",
-    accent: "#44d4a8",
-    tickets: [
-      {
-        key: "PRD-094",
-        title: "Notifications: batched delivery",
-        tags: ["Backend"],
-        owner: "SR",
-        priority: "medium",
-      },
-      {
-        key: "PRD-090",
-        title: "Billing insights empty state",
-        tags: ["Design"],
-        owner: "MC",
-        priority: "low",
       },
     ],
   },
@@ -189,18 +162,6 @@ const Dashboard = () => {
           </nav>
         </div>
 
-        <div className="sidebar-section">
-          <p className="section-label">Workload</p>
-          <div className="sidebar-progress">
-            <div className="progress-ring">
-              <span>72%</span>
-            </div>
-            <div>
-              <p className="progress-title">Sprint capacity</p>
-              <p className="progress-subtitle">9 of 12 contributors active</p>
-            </div>
-          </div>
-        </div>
       </aside>
 
       <main className="dashboard-main">
@@ -213,7 +174,6 @@ const Dashboard = () => {
             </p>
           </div>
           <div className="header-actions">
-            <button className="ghost-button">Quick search</button>
             <button className="primary-button">New issue</button>
           </div>
         </header>
