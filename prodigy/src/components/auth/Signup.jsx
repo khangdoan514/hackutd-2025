@@ -30,15 +30,6 @@ const Signup = ({ setIsAuthenticated }) => {
 
         <form className="auth-form" onSubmit={handleSubmit}>
           <input
-            type="text"
-            name="name"
-            placeholder="Full Name"
-            value={formData.name}
-            onChange={handleChange}
-            className="form-input"
-            required
-          />
-          <input
             type="email"
             name="email"
             placeholder="Email"

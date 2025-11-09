@@ -8,15 +8,15 @@ export default function Dashboard() {
 
   const tasks = {
     backlog: [
-      { title: "Add dark mode toggle", priority: "Medium", tags: ["UI", "Design"], assignee: "ME" },
-      { title: "Fix sign-up redirect", priority: "High", tags: ["Auth"], assignee: "ZK" },
+      { title: "Add dark mode toggle", priority: "Medium", tags: ["UI", "Design"], assignee: "FE" },
+      { title: "Fix sign-up redirect", priority: "High", tags: ["Auth"], assignee: "KD" },
     ],
     "in-progress": [
-      { title: "Sprint 3 landing page", priority: "Low", tags: ["Frontend"], assignee: "EL" },
+      { title: "Sprint 3 landing page", priority: "Low", tags: ["Frontend"], assignee: "NC" },
     ],
     done: [
-      { title: "API endpoint refactor", priority: "Medium", tags: ["Backend"], assignee: "JR" },
-      { title: "Team updates section", priority: "Low", tags: ["UI"], assignee: "ME" },
+      { title: "API endpoint refactor", priority: "Medium", tags: ["Backend"], assignee: "CW" },
+      { title: "Team updates section", priority: "Low", tags: ["UI"], assignee: "FE" },
     ],
   };
 
@@ -100,13 +100,27 @@ export default function Dashboard() {
 
         {/* 🗞️ Team Updates */}
         <section className="team-updates">
-          <h4>Team Updates</h4>
-          <ul>
-            <li>🌟 UI polish on sprint board completed</li>
-            <li>🛠️ Backend sync tested successfully</li>
-            <li>📦 Deployment scheduled for next Monday</li>
-          </ul>
-        </section>
+  <div className="team-updates-header">
+    <h3>Team Updates</h3>
+    <span className="update-date">Nov 9, 2025</span>
+  </div>
+
+  <div className="updates-list">
+    <div className="update-card">
+      <span className="emoji">🌟</span>
+      <p><strong>UI Team:</strong> Sprint board redesign completed.</p>
+    </div>
+    <div className="update-card">
+      <span className="emoji">🛠️</span>
+      <p><strong>Backend Team:</strong> API connection tested successfully.</p>
+    </div>
+    <div className="update-card">
+      <span className="emoji">📦</span>
+      <p><strong>Frontend Team:</strong> Scheduled for next Monday.</p>
+    </div>
+  </div>
+</section>
+
       </main>
     </div>
   );
