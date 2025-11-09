@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import "./Calendar.css";
+import { ChevronLeft, ChevronRight, Plus, Sparkles, Clock, User, Tag, AlertCircle } from 'lucide-react';
 
 const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
@@ -12,6 +13,7 @@ const taskSeed = [
     owner: "Product",
     status: "due-soon",
     category: "Meeting",
+    priority: "high",
   },
   {
     id: "task-02",
@@ -21,6 +23,7 @@ const taskSeed = [
     owner: "Design",
     status: "planned",
     category: "Review",
+    priority: "medium",
   },
   {
     id: "task-03",
@@ -30,6 +33,7 @@ const taskSeed = [
     owner: "Platform",
     status: "at-risk",
     category: "Delivery",
+    priority: "high",
   },
   {
     id: "task-04",
@@ -39,6 +43,7 @@ const taskSeed = [
     owner: "QA",
     status: "planned",
     category: "QA",
+    priority: "medium",
   },
   {
     id: "task-05",
@@ -48,6 +53,7 @@ const taskSeed = [
     owner: "Research",
     status: "planned",
     category: "Customer",
+    priority: "low",
   },
   {
     id: "task-06",
@@ -57,6 +63,7 @@ const taskSeed = [
     owner: "Marketing",
     status: "completed",
     category: "Content",
+    priority: "low",
   },
   {
     id: "task-07",
@@ -66,6 +73,17 @@ const taskSeed = [
     owner: "Security",
     status: "due-soon",
     category: "Audit",
+    priority: "high",
+  },
+  {
+    id: "task-08",
+    date: "2025-11-15",
+    title: "Team retrospective",
+    time: "03:00 PM",
+    owner: "Product",
+    status: "planned",
+    category: "Meeting",
+    priority: "medium",
   },
 ];
 
@@ -101,6 +119,8 @@ const Calendar = () => {
     new Date(today.getFullYear(), today.getMonth(), 1)
   );
   const [selectedDate, setSelectedDate] = useState(today);
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiFocus, setAiFocus] = useState("");
 
   const tasksByDate = useMemo(() => {
     return taskSeed.reduce((result, task) => {
@@ -125,8 +145,86 @@ const Calendar = () => {
     return taskSeed
       .filter((task) => task.date >= todayKey)
       .sort((a, b) => (a.date > b.date ? 1 : -1))
-      .slice(0, 4);
+      .slice(0, 5);
   }, [today]);
+
+  const handleGenerateAIFocus = async () => {
+    setAiLoading(true);
+    setAiFocus("");
+    
+    try {
+      const response = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'claude-sonnet-4-20250514',
+          max_tokens: 500,
+          messages: [{
+            role: 'user',
+            content: `You are a productivity AI assistant helping a team manage their schedule. Analyze the following tasks for ${selectedKey}:
+
+${selectedTasks.length > 0 ? selectedTasks.map(t => `• ${t.title}
+  Time: ${t.time}
+  Owner: ${t.owner}
+  Priority: ${t.priority}
+  Status: ${t.status}
+  Category: ${t.category}`).join('\n\n') : 'No tasks scheduled'}
+
+Provide a concise daily focus guide:
+
+🎯 Daily Focus: (One clear sentence about what matters most today)
+
+📋 Prioritization:
+- (Top priority task and why)
+- (Second focus area)
+- (Any time-sensitive items)
+
+💡 Insights:
+- (Any scheduling conflicts or suggestions)
+- (Recommended approach for the day)
+
+Keep it brief, actionable, and friendly.`
+          }]
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`API request failed: ${response.status}`);
+      }
+
+      const data = await response.json();
+      
+      // Extract text from Claude's response
+      let text = '';
+      if (data.content && Array.isArray(data.content)) {
+        text = data.content
+          .filter(item => item.type === 'text')
+          .map(item => item.text)
+          .join('\n');
+      }
+      
+      if (!text) {
+        throw new Error('No response text received');
+      }
+      
+      setAiFocus(text);
+    } catch (error) {
+      console.error('AI Error:', error);
+      if (error.message.includes('failed: 401')) {
+        setAiFocus('⚠️ Authentication error. The API key may be missing or invalid.');
+      } else if (error.message.includes('failed:')) {
+        setAiFocus(`⚠️ API Error: ${error.message}. Please try again.`);
+      } else if (error.message.includes('No response')) {
+        setAiFocus('⚠️ No response received from AI. Please try again.');
+      } else {
+        setAiFocus('⚠️ Error generating focus. Please check your connection and try again.');
+      }
+    } finally {
+      setAiLoading(false);
+    }
+  };
 
   const handleMonthChange = (offset) => {
     setCurrentMonth((prev) => {
@@ -138,6 +236,7 @@ const Calendar = () => {
 
   const handleDaySelect = (day) => {
     setSelectedDate(new Date(day));
+    setAiFocus(""); // Reset AI focus when changing days
   };
 
   const monthLabel = currentMonth.toLocaleString("default", {
@@ -149,38 +248,60 @@ const Calendar = () => {
     <div className="calendar-page">
       <header className="calendar-header">
         <div>
-          <h1>Schedule</h1>
-          
+          <p className="eyebrow">Planning</p>
+          <h1>Schedule & Calendar</h1>
+          <p className="subtitle">Manage your team's timeline and deliverables</p>
         </div>
 
-        <div className="calendar-controls">
-          <button
-            type="button"
-            className="ghost-button"
-            onClick={() => handleMonthChange(-1)}
-          >
-            ← Prev
-          </button>
-          <span className="month-label">{monthLabel}</span>
-          <button
-            type="button"
-            className="ghost-button"
-            onClick={() => handleMonthChange(1)}
-          >
-            Next →
+        <div className="header-actions">
+          <button type="button" className="btn-secondary">
+            <Plus />
+            Add Event
           </button>
         </div>
       </header>
 
+      <div className="calendar-controls-bar">
+        <div className="calendar-nav">
+          <button
+            type="button"
+            className="nav-button"
+            onClick={() => handleMonthChange(-1)}
+          >
+            <ChevronLeft />
+          </button>
+          <span className="month-label">{monthLabel}</span>
+          <button
+            type="button"
+            className="nav-button"
+            onClick={() => handleMonthChange(1)}
+          >
+            <ChevronRight />
+          </button>
+        </div>
+        <button
+          type="button"
+          className="btn-today"
+          onClick={() => {
+            setCurrentMonth(new Date(today.getFullYear(), today.getMonth(), 1));
+            setSelectedDate(today);
+          }}
+        >
+          Today
+        </button>
+      </div>
+
       <section className="calendar-shell">
         <div className="calendar-grid-wrapper">
-          <div className="calendar-grid">
+          <div className="calendar-weekdays">
             {dayNames.map((name) => (
-              <p key={name} className="day-name">
+              <div key={name} className="day-name">
                 {name}
-              </p>
+              </div>
             ))}
+          </div>
 
+          <div className="calendar-grid">
             {daysInView.map((day) => {
               const key = formatDateKey(day);
               const tasksForDay = tasksByDate[key] || [];
@@ -188,12 +309,13 @@ const Calendar = () => {
                 day.getMonth() !== currentMonth.getMonth() ||
                 day.getFullYear() !== currentMonth.getFullYear();
               const isToday = formatDateKey(today) === key;
+              const isSelected = selectedKey === key;
 
               const dayClasses = [
                 "calendar-day",
                 isOutside && "outside-month",
                 isToday && "today",
-                selectedKey === key && "selected",
+                isSelected && "selected",
               ]
                 .filter(Boolean)
                 .join(" ");
@@ -206,12 +328,20 @@ const Calendar = () => {
                   onClick={() => handleDaySelect(day)}
                 >
                   <span className="day-number">{day.getDate()}</span>
-                  {tasksForDay.length > 0 && (
-                    <span className="task-count">
-                      {tasksForDay.length} task
-                      {tasksForDay.length > 1 ? "s" : ""}
-                    </span>
-                  )}
+                  <div className="day-tasks">
+                    {tasksForDay.slice(0, 3).map((task) => (
+                      <div
+                        key={task.id}
+                        className={`task-dot priority-${task.priority}`}
+                        title={task.title}
+                      >
+                        <span className="task-indicator"></span>
+                      </div>
+                    ))}
+                    {tasksForDay.length > 3 && (
+                      <span className="more-tasks">+{tasksForDay.length - 3}</span>
+                    )}
+                  </div>
                 </button>
               );
             })}
@@ -219,11 +349,54 @@ const Calendar = () => {
         </div>
 
         <aside className="calendar-sidebar">
+          {/* AI Focus Section */}
+          <div className="ai-focus-card">
+            <div className="ai-focus-header">
+              <div className="ai-focus-title">
+                <Sparkles className="sparkle-icon" />
+                <h3>AI Daily Focus</h3>
+              </div>
+              <button
+                className="btn-generate"
+                onClick={handleGenerateAIFocus}
+                disabled={aiLoading || selectedTasks.length === 0}
+              >
+                {aiLoading ? 'Generating...' : 'Generate'}
+              </button>
+            </div>
+            {selectedTasks.length === 0 ? (
+              <p className="empty-state">
+                Select a day with tasks to generate AI focus insights.
+              </p>
+            ) : aiLoading ? (
+              <div className="ai-loading">
+                <div className="loading-spinner"></div>
+                <p>Analyzing your schedule...</p>
+              </div>
+            ) : aiFocus ? (
+              <div className="ai-focus-content">
+                {aiFocus}
+              </div>
+            ) : (
+              <p className="empty-state">
+                Click "Generate" to get AI-powered insights for {selectedDate.toLocaleDateString('default', { month: 'short', day: 'numeric' })}
+              </p>
+            )}
+          </div>
+
+          {/* Day Breakdown */}
           <div className="tasks-card">
             <div className="tasks-card-header">
               <div>
-                <p className="panel-title">Day breakdown</p>
-                <p className="muted">{selectedKey}</p>
+                <h3 className="panel-title">Day Breakdown</h3>
+                <p className="panel-subtitle">
+                  {selectedDate.toLocaleDateString('default', { 
+                    weekday: 'long',
+                    month: 'long', 
+                    day: 'numeric',
+                    year: 'numeric'
+                  })}
+                </p>
               </div>
               <span className="status-pill neutral">
                 {selectedTasks.length} scheduled
@@ -232,18 +405,37 @@ const Calendar = () => {
 
             <div className="tasks-list">
               {selectedTasks.length === 0 && (
-                <p className="empty-state">
-                  Nothing on the books for this day. Add a task from the board.
-                </p>
+                <div className="empty-state-block">
+                  <AlertCircle className="empty-icon" />
+                  <p>Nothing scheduled for this day</p>
+                  <button className="btn-link">
+                    <Plus className="btn-link-icon" />
+                    Add a task
+                  </button>
+                </div>
               )}
 
               {selectedTasks.map((task) => (
                 <article key={task.id} className="task-row">
-                  <div>
-                    <p className="task-title">{task.title}</p>
-                    <p className="task-meta">
-                      {task.time} • {task.owner} • {task.category}
-                    </p>
+                  <div className="task-row-content">
+                    <div className={`task-priority-indicator priority-${task.priority}`}></div>
+                    <div className="task-info">
+                      <p className="task-title">{task.title}</p>
+                      <div className="task-meta">
+                        <span className="meta-item">
+                          <Clock className="meta-icon" />
+                          {task.time}
+                        </span>
+                        <span className="meta-item">
+                          <User className="meta-icon" />
+                          {task.owner}
+                        </span>
+                        <span className="meta-item">
+                          <Tag className="meta-icon" />
+                          {task.category}
+                        </span>
+                      </div>
+                    </div>
                   </div>
                   <span className={`status-pill ${task.status}`}>
                     {statusCopy[task.status]}
@@ -253,18 +445,27 @@ const Calendar = () => {
             </div>
           </div>
 
+          {/* Upcoming Focus */}
           <div className="tasks-card compact">
-            <p className="panel-title">Upcoming focus</p>
+            <h3 className="panel-title">Upcoming Focus</h3>
             <ul className="upcoming-list">
               {upcomingTasks.map((task) => (
                 <li key={`upcoming-${task.id}`}>
-                  <div>
-                    <p className="task-title">{task.title}</p>
-                    <p className="task-meta">
-                      {task.date} • {task.time}
-                    </p>
+                  <div className="upcoming-task-info">
+                    <div className={`status-dot ${task.status}`} />
+                    <div>
+                      <p className="task-title">{task.title}</p>
+                      <p className="task-meta">
+                        {new Date(task.date).toLocaleDateString('default', { 
+                          month: 'short', 
+                          day: 'numeric' 
+                        })} • {task.time}
+                      </p>
+                    </div>
                   </div>
-                  <span className={`status-dot ${task.status}`} />
+                  <span className={`priority-badge priority-${task.priority}`}>
+                    {task.priority}
+                  </span>
                 </li>
               ))}
             </ul>

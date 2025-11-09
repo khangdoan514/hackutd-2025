@@ -73,3 +73,14 @@
 .nav-link:hover::after {
   width: 100%;
 }
+
+/* === CONTENT SPACING === */
+/* Add this to your body or main content container */
+body {
+  padding-top: 120px; /* 20px (top position) + 64px (navbar height) + 36px (extra spacing) */
+}
+
+/* OR if you have a specific content wrapper: */
+.content-wrapper {
+  padding-top: 120px;
+}

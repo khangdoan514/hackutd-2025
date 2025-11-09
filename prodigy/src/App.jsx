@@ -9,7 +9,7 @@ import ForgotPassword from "./components/auth/ForgotPassword";
 import ProfileSetup from "./components/profile/ProfileSetup";
 
 // Navs
-import Navbar from "./components/Navbar";
+import Navbar from "./components/navbar";
 import Dashboard from "./components/pages/Dashboard";
 import Calendar from "./components/pages/Calendar";
 import Team from "./components/pages/Team"

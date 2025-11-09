@@ -1,262 +1,576 @@
-import React, { useMemo, useState } from "react";
-import "./Team.css";
+import React, { useState } from 'react';
+import { ChevronLeft, ChevronRight, Send, Users, User, Circle, Sparkles, X, MessageCircle, Plus, Trash2 } from 'lucide-react';
+import './Team.css';
 
-/**
- * PMBlackPurpleHub.jsx
- * --------------------------------------------------
- * Black & purple PM hub with:
- * - Overall Progress gauge
- * - Calendar with **red sprint highlighting** (current sprint window)
- * - Team members list
- * - Deadlines list with Complete
- * - Create Poll button
- *
- * Change the sprint config below to match your cadence.
- */
-
-export default function PMBlackPurpleHub() {
-  // ----------- Sprint config -----------
-  // Anchor: the start of your sprint cycle (e.g., a Monday when the cycle began).
-  const sprintAnchor = new Date(2025, 0, 6); // Jan 6, 2025 (Monday) — change as needed
-  const sprintLengthDays = 14;               // typical two‑week sprint
-  // Which sprint window to color? "current" colors only the sprint that contains 'today'.
-  // You can switch to "rolling" to color the sprint that intersects the visible month.
-  const sprintMode = "current"; // "current" | "rolling"
-
-  // -------- Mock Data --------
-  const progress = 72; // overall percent
-  const team = useMemo(
-    () => [
-      { id: "u1", name: "Frabina E.", online: true, initials: "FE" },
-      { id: "u2", name: "Fred E.", online: true, initials: "FE" },
-      { id: "u3", name: "Evan S.", online: true, initials: "ES" },
-      { id: "u4", name: "Fahim H.", online: false, initials: "FH" },
-      { id: "u5", name: "Hasti P.", online: false, initials: "HP" },
-      { id: "u6", name: "Henry N.", online: false, initials: "HN" },
-      { id: "u7", name: "Frabina E.", online: true, initials: "FE" },
-      { id: "u8", name: "Henry N.", online: false, initials: "HN" },
-      { id: "u9", name: "Evan S.", online: true, initials: "ES" },
+const TeamDashboard = () => {
+  const [currentDate, setCurrentDate] = useState(new Date(2025, 10, 9));
+  const [selectedChat, setSelectedChat] = useState('team');
+  const [message, setMessage] = useState('');
+  const [chatOpen, setChatOpen] = useState(false);
+  const [showSprintModal, setShowSprintModal] = useState(false);
+  const [showDeadlineModal, setShowDeadlineModal] = useState(false);
+  const [showEventModal, setShowEventModal] = useState(false);
+  const [aiPrompt, setAiPrompt] = useState('');
+  const [aiResponse, setAiResponse] = useState('');
+  const [aiLoading, setAiLoading] = useState(false);
+  
+  const [messages, setMessages] = useState({
+    team: [
+      { sender: 'Sarah', text: 'Sprint planning meeting at 2pm', time: '10:30 AM' },
+      { sender: 'Mike', text: 'Updated the design mockups', time: '11:15 AM' }
     ],
-    []
-  );
+    sarah: [{ sender: 'Sarah', text: 'Can you review my PR?', time: '9:00 AM' }],
+    mike: [{ sender: 'Mike', text: 'Working on the API integration', time: '8:30 AM' }],
+    jen: []
+  });
 
-  const [deadlines, setDeadlines] = useState([
-    { id: "d1", title: "this due", hoursLeft: 3, status: "due" },
-    { id: "d2", title: "this due", hoursLeft: 10, status: "due" },
+  const [sprints, setSprints] = useState([
+    { id: 1, start: new Date(2025, 10, 3), end: new Date(2025, 10, 23), name: 'Sprint 1' },
+    { id: 2, start: new Date(2025, 11, 1), end: new Date(2025, 11, 21), name: 'Sprint 2' },
   ]);
 
-  function completeDeadline(id) {
-    setDeadlines((prev) => prev.map((d) => (d.id === id ? { ...d, status: "done" } : d)));
-  }
+  const [deadlines, setDeadlines] = useState([
+    { id: 1, date: new Date(2025, 10, 15), title: 'Feature Freeze', priority: 'high' },
+    { id: 2, date: new Date(2025, 10, 23), title: 'Sprint 1 Demo', priority: 'medium' },
+    { id: 3, date: new Date(2025, 11, 10), title: 'Beta Release', priority: 'high' },
+    { id: 4, date: new Date(2025, 11, 21), title: 'Sprint 2 Complete', priority: 'medium' }
+  ]);
 
-  // -------- Calendar helpers --------
-  const today = stripTime(new Date());
-  const [activeDate, setActiveDate] = useState(new Date(today.getFullYear(), today.getMonth(), 1));
+  const [events, setEvents] = useState([
+    { id: 1, date: new Date(2025, 10, 12), title: 'Team Standup', color: 'green' },
+    { id: 2, date: new Date(2025, 10, 20), title: 'Client Review', color: 'purple' }
+  ]);
 
-  // Compute the sprint window to highlight
-  const { currentSprintStart, currentSprintEnd } = useMemo(() => {
-    const { start, end } = sprintWindowForDate(sprintAnchor, sprintLengthDays, today);
-    return { currentSprintStart: start, currentSprintEnd: end };
-  }, [sprintAnchor, sprintLengthDays, today]);
+  const [progressData] = useState([
+    { label: 'Design', value: 85, color: 'blue' },
+    { label: 'Frontend', value: 65, color: 'green' },
+    { label: 'Backend', value: 72, color: 'purple' },
+    { label: 'Testing', value: 45, color: 'orange' }
+  ]);
 
-  const { monthName, daysGrid } = useMemo(() => {
-    const m = activeDate.getMonth();
-    const y = activeDate.getFullYear();
-    const monthName = activeDate.toLocaleString(undefined, { month: "long", year: "numeric" });
+  const teamMembers = [
+    { id: 'sarah', name: 'Sarah', role: 'Designer', unread: 1 },
+    { id: 'mike', name: 'Mike', role: 'Developer', unread: 0 },
+    { id: 'jen', name: 'Jen', role: 'QA', unread: 0 }
+  ];
 
-    const first = new Date(y, m, 1);
-    const startDay = (first.getDay() + 6) % 7; // Monday=0
-    const daysInMonth = new Date(y, m + 1, 0).getDate();
-    const prevMonthDays = new Date(y, m, 0).getDate();
+  const handleAIGenerate = async () => {
+    if (!aiPrompt.trim()) return;
+    
+    setAiLoading(true);
+    setAiResponse('');
+    
+    try {
+      const response = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'claude-sonnet-4-20250514',
+          max_tokens: 1000,
+          messages: [{
+            role: 'user',
+            content: `You are a project management AI assistant. The user is managing a team with the following context:
+            
+Current Sprints: ${JSON.stringify(sprints.map(s => ({ name: s.name, start: s.start.toDateString(), end: s.end.toDateString() })))}
+Current Deadlines: ${JSON.stringify(deadlines.map(d => ({ title: d.title, date: d.date.toDateString(), priority: d.priority })))}
+Current Events: ${JSON.stringify(events.map(e => ({ title: e.title, date: e.date.toDateString() })))}
+Team Progress: Design 85%, Frontend 65%, Backend 72%, Testing 45%
 
-    const cells = [];
+User Request: ${aiPrompt}
 
-    // Decide which sprint window to display for coloring
-    let sprintStart = currentSprintStart;
-    let sprintEnd = currentSprintEnd;
-    if (sprintMode === "rolling") {
-      // choose sprint window that overlaps the visible first-of-month
-      const visRef = stripTime(new Date(y, m, 1));
-      const w = sprintWindowForDate(sprintAnchor, sprintLengthDays, visRef);
-      sprintStart = w.start; sprintEnd = w.end;
+Please provide helpful project management insights, suggestions, or generate requested content. If they ask you to create sprints, deadlines, or events, provide the details in a clear format they can use.`
+          }]
+        })
+      });
+
+      const data = await response.json();
+      const text = data.content.map(item => item.type === 'text' ? item.text : '').join('\n');
+      setAiResponse(text);
+    } catch (error) {
+      setAiResponse('Error generating response. Please try again.');
+      console.error('AI Error:', error);
+    } finally {
+      setAiLoading(false);
+    }
+  };
+
+  const getDaysInMonth = (date) => {
+    const year = date.getFullYear();
+    const month = date.getMonth();
+    const firstDay = new Date(year, month, 1);
+    const lastDay = new Date(year, month + 1, 0);
+    const daysInMonth = lastDay.getDate();
+    const startingDayOfWeek = firstDay.getDay();
+    return { daysInMonth, startingDayOfWeek };
+  };
+
+  const isInSprint = (date) => {
+    return sprints.find(sprint => date >= sprint.start && date <= sprint.end);
+  };
+
+  const isSprintBoundary = (date) => {
+    return sprints.find(sprint => 
+      date.toDateString() === sprint.start.toDateString() || 
+      date.toDateString() === sprint.end.toDateString()
+    );
+  };
+
+  const hasDeadline = (date) => {
+    return deadlines.find(d => d.date.toDateString() === date.toDateString());
+  };
+
+  const hasEvent = (date) => {
+    return events.find(e => e.date.toDateString() === date.toDateString());
+  };
+
+  const navigateMonth = (direction) => {
+    setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + direction, 1));
+  };
+
+  const handleCreateSprint = (e) => {
+    e.preventDefault();
+    const formData = new FormData(e.target);
+    const newSprint = {
+      id: Date.now(),
+      start: new Date(formData.get('startDate')),
+      end: new Date(formData.get('endDate')),
+      name: formData.get('name')
+    };
+    setSprints([...sprints, newSprint]);
+    setShowSprintModal(false);
+    e.target.reset();
+  };
+
+  const handleCreateDeadline = (e) => {
+    e.preventDefault();
+    const formData = new FormData(e.target);
+    const newDeadline = {
+      id: Date.now(),
+      date: new Date(formData.get('date')),
+      title: formData.get('title'),
+      priority: formData.get('priority')
+    };
+    setDeadlines([...deadlines, newDeadline]);
+    setShowDeadlineModal(false);
+    e.target.reset();
+  };
+
+  const handleCreateEvent = (e) => {
+    e.preventDefault();
+    const formData = new FormData(e.target);
+    const newEvent = {
+      id: Date.now(),
+      date: new Date(formData.get('date')),
+      title: formData.get('title'),
+      color: formData.get('color')
+    };
+    setEvents([...events, newEvent]);
+    setShowEventModal(false);
+    e.target.reset();
+  };
+
+  const deleteDeadline = (id) => {
+    setDeadlines(deadlines.filter(d => d.id !== id));
+  };
+
+  const deleteEvent = (id) => {
+    setEvents(events.filter(e => e.id !== id));
+  };
+
+  const deleteSprint = (id) => {
+    setSprints(sprints.filter(s => s.id !== id));
+  };
+
+  const renderCalendar = () => {
+    const { daysInMonth, startingDayOfWeek } = getDaysInMonth(currentDate);
+    const days = [];
+    const today = new Date();
+
+    for (let i = 0; i < startingDayOfWeek; i++) {
+      days.push(<div key={`empty-${i}`} className="calendar-day-empty"></div>);
     }
 
-    // leading cells (previous month)
-    for (let i = 0; i < startDay; i++) {
-      const day = prevMonthDays - (startDay - 1 - i);
-      const date = stripTime(new Date(y, m - 1, day));
-      cells.push({ key: "p" + i, date, day, faded: true, today: isSameDate(date, today), sprint: inRange(date, sprintStart, sprintEnd) });
-    }
-    // month days
-    for (let d = 1; d <= daysInMonth; d++) {
-      const date = stripTime(new Date(y, m, d));
-      cells.push({ key: "d" + d, date, day: d, today: isSameDate(date, today), sprint: inRange(date, sprintStart, sprintEnd) });
-    }
-    // trailing to fill to end of week
-    while (cells.length % 7 !== 0) {
-      const idx = cells.length;
-      const day = (idx % 31) + 1;
-      const date = stripTime(new Date(y, m + 1, day));
-      cells.push({ key: "n" + idx, date, day, faded: true, today: isSameDate(date, today), sprint: inRange(date, sprintStart, sprintEnd) });
-    }
-    // ensure 6 rows (42 cells)
-    while (cells.length < 42) {
-      const idx = cells.length;
-      const day = (idx % 31) + 1;
-      const date = stripTime(new Date(y, m + 1, day));
-      cells.push({ key: "x" + idx, date, day, faded: true, today: isSameDate(date, today), sprint: inRange(date, sprintStart, sprintEnd) });
+    for (let day = 1; day <= daysInMonth; day++) {
+      const date = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
+      const inSprint = isInSprint(date);
+      const isBoundary = isSprintBoundary(date);
+      const deadline = hasDeadline(date);
+      const event = hasEvent(date);
+      const isToday = date.toDateString() === today.toDateString();
+
+      let dayClasses = 'calendar-day';
+      if (inSprint) {
+        if (isBoundary) {
+          dayClasses += ' sprint-boundary';
+        } else {
+          dayClasses += ' sprint-week';
+        }
+      }
+      if (isToday) {
+        dayClasses += ' today';
+      }
+
+      days.push(
+        <div key={day} className={dayClasses}>
+          <div className="day-number">{day}</div>
+          {deadline && (
+            <div className={`calendar-badge deadline-${deadline.priority}`}>
+              {deadline.title}
+            </div>
+          )}
+          {event && (
+            <div className={`calendar-badge event-${event.color}`}>
+              {event.title}
+            </div>
+          )}
+        </div>
+      );
     }
 
-    return { monthName, daysGrid: cells };
-  }, [activeDate, currentSprintStart, currentSprintEnd, sprintAnchor, sprintLengthDays, sprintMode, today]);
+    return days;
+  };
 
-  function addMonths(n) {
-    const d = new Date(activeDate);
-    d.setMonth(d.getMonth() + n);
-    setActiveDate(d);
-  }
+  const sendMessage = () => {
+    if (message.trim()) {
+      setMessages({
+        ...messages,
+        [selectedChat]: [
+          ...messages[selectedChat],
+          { sender: 'You', text: message, time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) }
+        ]
+      });
+      setMessage('');
+    }
+  };
 
-  const gaugeDeg = progress * 1.8; // 0..180
+  const ProgressCircle = ({ value, label, color }) => {
+    const radius = 35;
+    const circumference = 2 * Math.PI * radius;
+    const offset = circumference - (value / 100) * circumference;
+
+    return (
+      <div className="progress-circle-container">
+        <div className="progress-circle">
+          <svg className="progress-svg">
+            <circle cx="48" cy="48" r={radius} className="progress-bg" />
+            <circle 
+              cx="48" 
+              cy="48" 
+              r={radius} 
+              className={`progress-fg progress-${color}`}
+              strokeDasharray={circumference} 
+              strokeDashoffset={offset}
+            />
+          </svg>
+          <div className="progress-value">
+            <span>{value}%</span>
+          </div>
+        </div>
+        <span className="progress-label">{label}</span>
+      </div>
+    );
+  };
+
+  const Modal = ({ show, onClose, title, children }) => {
+    if (!show) return null;
+    return (
+      <div className="modal-overlay">
+        <div className="modal-content">
+          <div className="modal-header">
+            <h3>{title}</h3>
+            <button onClick={onClose} className="modal-close">
+              <X />
+            </button>
+          </div>
+          {children}
+        </div>
+      </div>
+    );
+  };
 
   return (
-    <div className="pp-shell">
-      {/* Top row: Big note / announcements box */}
-      <section className="pp-note card">
-        <div className="pp-noteHeader">
-          <h3>Project Brief</h3>
-          <button className="btn ghost">Edit</button>
-        </div>
-        <p className="muted">Use this space for quick updates, links, or sprint context.</p>
-      </section>
-
-      {/* Progress card */}
-      <section className="pp-progress card">
-        <header className="pp-cardHeader">
-          <div>
-            <div className="eyebrow">Overall Progress</div>
-            <div className="meta">tasks completed vs total</div>
-          </div>
-        </header>
-
-        <div className="gauge">
-          <div
-            className="gauge-arc"
-            style={{ 
-              background: `conic-gradient(var(--accent) ${gaugeDeg}deg, var(--track) ${gaugeDeg}deg 180deg)` 
-            }}
-          />
-          <div className="gauge-center">
-            <div className="pct">{progress}%</div>
-            <div className="sub muted">Completed</div>
-          </div>
-          <div className="gauge-ticks">
-            <span>0</span><span>50</span><span>100</span>
+    <div className="dashboard-container">
+      {/* Main Content */}
+      <div className="main-content">
+        {/* Progress Section */}
+        <div className="card">
+          <h2 className="section-title">Team Progress</h2>
+          <div className="progress-grid">
+            {progressData.map((item, index) => (
+              <ProgressCircle key={index} {...item} />
+            ))}
           </div>
         </div>
-      </section>
 
-      {/* Calendar card */}
-      <section className="pp-calendar card">
-        <header className="pp-cardHeader">
-          <div className="eyebrow">{monthName}</div>
-          <div className="calendar-nav">
-            <button className="btn icon" onClick={() => addMonths(-1)}>‹</button>
-            <button className="btn icon" onClick={() => addMonths(1)}>›</button>
+        {/* AI Generation Section */}
+        <div className="card ai-card">
+          <div className="ai-header">
+            <Sparkles className="ai-icon" />
+            <h2 className="section-title-white">AI Assistant</h2>
           </div>
-        </header>
-
-        <div className="cal-grid">
-          {["Mon","Tue","Wed","Thu","Fri","Sat","Sun"].map((d) => (
-            <div key={d} className="cal-dow muted">{d}</div>
-          ))}
-          {daysGrid.map((c) => (
-            <div
-              key={c.key}
-              className={`cal-cell ${c.faded ? "faded" : ""} ${c.today ? "today" : ""} ${c.sprint ? "sprint" : ""}`}
-              title={c.date.toDateString()}
+          <div className="ai-content">
+            <textarea
+              value={aiPrompt}
+              onChange={(e) => setAiPrompt(e.target.value)}
+              placeholder="Ask me to analyze team velocity, suggest sprint schedules, create reports, or optimize your project timeline..."
+              className="ai-textarea"
+              rows="3"
+            />
+            <button 
+              onClick={handleAIGenerate}
+              disabled={aiLoading}
+              className="ai-button"
             >
-              {c.day}
-            </div>
-          ))}
-        </div>
-        <div className="legend">
-          <span className="legend-chip sprint" /> Sprint window
-          <span className="legend-chip today" /> Today
-        </div>
-      </section>
-
-      {/* Team members list */}
-      <aside className="pp-team card">
-        <header className="pp-teamHeader">
-          <h3>Team Members</h3>
-          <button className="btn icon">＋</button>
-        </header>
-        <ul className="team-list">
-          {team.map((t) => (
-            <li key={t.id} className="team-row">
-              <div className="avatar">{t.initials}</div>
-              <div className="tmeta">
-                <div className="tname">{t.name}</div>
-                <div className={`badge ${t.online ? "online" : "offline"}`}>{t.online ? "online" : "offline"}</div>
+              {aiLoading ? 'Generating...' : 'Generate'}
+            </button>
+            {aiResponse && (
+              <div className="ai-response">
+                {aiResponse}
               </div>
-              <button className="btn ghost small">Message</button>
-            </li>
-          ))}
-        </ul>
-      </aside>
+            )}
+          </div>
+        </div>
 
-      {/* Deadlines header + Create Poll */}
-      <div className="pp-deadlineHdr">
-        <div className="eyebrow">Deadlines</div>
-        <button className="btn pill">＋ Create Poll</button>
+        {/* Calendar Section */}
+        <div className="card">
+          <div className="calendar-header">
+            <h2 className="section-title">Sprint Calendar</h2>
+            <div className="calendar-nav">
+              <button onClick={() => navigateMonth(-1)} className="nav-button">
+                <ChevronLeft />
+              </button>
+              <span className="calendar-month">
+                {currentDate.toLocaleString('default', { month: 'long', year: 'numeric' })}
+              </span>
+              <button onClick={() => navigateMonth(1)} className="nav-button">
+                <ChevronRight />
+              </button>
+            </div>
+          </div>
+          
+          <div className="action-buttons">
+            <button onClick={() => setShowSprintModal(true)} className="btn btn-blue">
+              <Plus className="btn-icon" />
+              Create Sprint
+            </button>
+            <button onClick={() => setShowDeadlineModal(true)} className="btn btn-red">
+              <Plus className="btn-icon" />
+              Create Deadline
+            </button>
+            <button onClick={() => setShowEventModal(true)} className="btn btn-green">
+              <Plus className="btn-icon" />
+              Create Event
+            </button>
+          </div>
+
+          <div className="calendar-grid">
+            {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
+              <div key={day} className="calendar-weekday">
+                {day}
+              </div>
+            ))}
+            {renderCalendar()}
+          </div>
+          <div className="calendar-legend">
+            <div className="legend-item">
+              <div className="legend-box sprint-week"></div>
+              <span>Sprint Week</span>
+            </div>
+            <div className="legend-item">
+              <div className="legend-box sprint-boundary"></div>
+              <span>Sprint Start/End</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Sprints List */}
+        <div className="card">
+          <h2 className="section-title">Active Sprints</h2>
+          <div className="list-container">
+            {sprints.map((sprint) => (
+              <div key={sprint.id} className="list-item">
+                <div className="list-item-content">
+                  <Circle className="icon-blue" />
+                  <div>
+                    <span className="item-title">{sprint.name}</span>
+                    <span className="item-subtitle">
+                      {sprint.start.toLocaleDateString()} - {sprint.end.toLocaleDateString()}
+                    </span>
+                  </div>
+                </div>
+                <button onClick={() => deleteSprint(sprint.id)} className="delete-button">
+                  <Trash2 />
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Deadlines Section */}
+        <div className="card">
+          <h2 className="section-title">Upcoming Deadlines</h2>
+          <div className="list-container">
+            {deadlines.sort((a, b) => a.date - b.date).map((deadline) => (
+              <div key={deadline.id} className="list-item">
+                <div className="list-item-content">
+                  <Circle className={deadline.priority === 'high' ? 'icon-red' : 'icon-yellow'} />
+                  <span className="item-title">{deadline.title}</span>
+                </div>
+                <div className="list-item-end">
+                  <span className="item-date">
+                    {deadline.date.toLocaleDateString('default', { month: 'short', day: 'numeric', year: 'numeric' })}
+                  </span>
+                  <button onClick={() => deleteDeadline(deadline.id)} className="delete-button">
+                    <Trash2 />
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
 
-      {/* Deadlines list */}
-      <section className="pp-deadlines card">
-        <ul className="deadline-list">
-          {deadlines.map((d) => (
-            <li key={d.id} className={`deadline-row ${d.status === "done" ? "is-done" : ""}`}>
-              <div className="d-title">
-                <div className="eyebrow">{d.title}</div>
-                <div className="muted">{d.hoursLeft} hours</div>
-              </div>
+      {/* Floating Chat Button */}
+      {!chatOpen && (
+        <button onClick={() => setChatOpen(true)} className="chat-fab">
+          <MessageCircle />
+        </button>
+      )}
+
+      {/* Floating Chat Panel */}
+      {chatOpen && (
+        <div className="chat-panel">
+          <div className="chat-header">
+            <h3>Messages</h3>
+            <button onClick={() => setChatOpen(false)} className="chat-close">
+              <X />
+            </button>
+          </div>
+
+          <div className="chat-list">
+            <button
+              onClick={() => setSelectedChat('team')}
+              className={`chat-list-item ${selectedChat === 'team' ? 'active' : ''}`}
+            >
+              <Users className="chat-icon" />
+              <span className="chat-name">Team Chat</span>
+            </button>
+            {teamMembers.map(member => (
               <button
-                className="btn subtle"
-                onClick={() => completeDeadline(d.id)}
-                disabled={d.status === "done"}
+                key={member.id}
+                onClick={() => setSelectedChat(member.id)}
+                className={`chat-list-item ${selectedChat === member.id ? 'active' : ''}`}
               >
-                {d.status === "done" ? "Completed" : "Complete"}
+                <div className="chat-member-info">
+                  <User className="chat-icon" />
+                  <div className="chat-member-text">
+                    <div className="chat-member-name">{member.name}</div>
+                    <div className="chat-member-role">{member.role}</div>
+                  </div>
+                </div>
+                {member.unread > 0 && (
+                  <span className="chat-unread-badge">{member.unread}</span>
+                )}
               </button>
-            </li>
-          ))}
-        </ul>
-      </section>
+            ))}
+          </div>
+
+          <div className="chat-messages">
+            {messages[selectedChat]?.map((msg, index) => (
+              <div key={index} className={`chat-message ${msg.sender === 'You' ? 'own-message' : ''}`}>
+                <div className={`message-bubble ${msg.sender === 'You' ? 'own-bubble' : 'other-bubble'}`}>
+                  {msg.sender !== 'You' && (
+                    <div className="message-sender">{msg.sender}</div>
+                  )}
+                  <div className="message-text">{msg.text}</div>
+                  <div className="message-time">{msg.time}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="chat-input-container">
+            <input
+              type="text"
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
+              placeholder="Type a message..."
+              className="chat-input"
+            />
+            <button onClick={sendMessage} className="chat-send-button">
+              <Send />
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Modals */}
+      <Modal show={showSprintModal} onClose={() => setShowSprintModal(false)} title="Create Sprint">
+        <form onSubmit={handleCreateSprint} className="modal-form">
+          <div className="form-group">
+            <label>Sprint Name</label>
+            <input type="text" name="name" required className="form-input" />
+          </div>
+          <div className="form-group">
+            <label>Start Date</label>
+            <input type="date" name="startDate" required className="form-input" />
+          </div>
+          <div className="form-group">
+            <label>End Date</label>
+            <input type="date" name="endDate" required className="form-input" />
+          </div>
+          <button type="submit" className="btn btn-blue btn-full">Create Sprint</button>
+        </form>
+      </Modal>
+
+      <Modal show={showDeadlineModal} onClose={() => setShowDeadlineModal(false)} title="Create Deadline">
+        <form onSubmit={handleCreateDeadline} className="modal-form">
+          <div className="form-group">
+            <label>Deadline Title</label>
+            <input type="text" name="title" required className="form-input" />
+          </div>
+          <div className="form-group">
+            <label>Date</label>
+            <input type="date" name="date" required className="form-input" />
+          </div>
+          <div className="form-group">
+            <label>Priority</label>
+            <select name="priority" className="form-input">
+              <option value="high">High</option>
+              <option value="medium">Medium</option>
+            </select>
+          </div>
+          <button type="submit" className="btn btn-red btn-full">Create Deadline</button>
+        </form>
+      </Modal>
+
+      <Modal show={showEventModal} onClose={() => setShowEventModal(false)} title="Create Event">
+        <form onSubmit={handleCreateEvent} className="modal-form">
+          <div className="form-group">
+            <label>Event Title</label>
+            <input type="text" name="title" required className="form-input" />
+          </div>
+          <div className="form-group">
+            <label>Date</label>
+            <input type="date" name="date" required className="form-input" />
+          </div>
+          <div className="form-group">
+            <label>Color</label>
+            <select name="color" className="form-input">
+              <option value="green">Green</option>
+              <option value="purple">Purple</option>
+              <option value="pink">Pink</option>
+              <option value="orange">Orange</option>
+            </select>
+          </div>
+          <button type="submit" className="btn btn-green btn-full">Create Event</button>
+        </form>
+      </Modal>
     </div>
   );
-}
+};
 
-/* ===== Date helpers / sprint logic ===== */
-function stripTime(d){
-  const x = new Date(d);
-  x.setHours(0,0,0,0);
-  return x;
-}
-function diffDays(a,b){
-  const ms = stripTime(a).getTime() - stripTime(b).getTime();
-  return Math.round(ms/86400000);
-}
-function isSameDate(a,b){ return stripTime(a).getTime() === stripTime(b).getTime(); }
-function inRange(d, start, end){ return stripTime(d) >= stripTime(start) && stripTime(d) <= stripTime(end); }
-
-/** Returns {start, end} sprint window for a reference date. */
-function sprintWindowForDate(anchor, lengthDays, refDate){
-  const a = stripTime(anchor);
-  const r = stripTime(refDate);
-  const daysSinceAnchor = diffDays(r, a);
-  const cycles = Math.floor(daysSinceAnchor / lengthDays);
-  const start = new Date(a);
-  start.setDate(a.getDate() + cycles * lengthDays);
-  const end = new Date(start);
-  end.setDate(start.getDate() + lengthDays - 1);
-  return { start: stripTime(start), end: stripTime(end) };
-}
+export default TeamDashboard;
