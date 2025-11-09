@@ -1,9 +1,9 @@
 import React, { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { Link } from "react-router-dom";
 import "./Auth.css";
+import axios from "axios";
 
-const Login = ({ setIsAuthenticated }) => {
-  const navigate = useNavigate();
+const Login = () => {
   const [formData, setFormData] = useState({ email: "", password: "" });
 
   const handleChange = (e) => {
@@ -11,47 +11,62 @@ const Login = ({ setIsAuthenticated }) => {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log("Login attempt:", formData);
+    try {
+      const response = await axios.post("http://localhost:3000/api/signin", formData);
+      if (response.data.success) {
+        console.log("Login successful");
+        const email = formData.email;
+        const password = formData.password;
+        // console("Email: " + email + ", password: " + password);
+        console.log("Login successful");
+      }
+    }
 
-    // ✅ Set authenticated
-    setIsAuthenticated(true);
-
-    // Redirect to profile setup
-    navigate("/profile-setup");
+    catch (error) {
+      console.log("Login failed:", error.response?.data?.message);
+    }
   };
 
   return (
     <div className="auth-container">
       <div className="auth-card">
-        <h2 className="auth-title">Sign in to Prodigy</h2>
-        <p className="auth-subtitle">Enter your credentials to continue</p>
+        <h2 className="auth-title">Welcome Back</h2>
+        <p className="auth-subtitle">Sign in to your Prodigy workspace</p>
 
         <form className="auth-form" onSubmit={handleSubmit}>
           <input
             type="email"
             name="email"
-            placeholder="Email"
+            className="form-input"
+            placeholder="Email address"
             value={formData.email}
             onChange={handleChange}
-            className="form-input"
             required
           />
           <input
             type="password"
             name="password"
+            className="form-input"
             placeholder="Password"
             value={formData.password}
             onChange={handleChange}
-            className="form-input"
             required
           />
+
+          <button type="submit" className="auth-button">
+            Sign In
+          </button>
+
           <div className="auth-links">
-            <Link to="/forgot-password" className="auth-link">Forgot password?</Link>
-            <Link to="/signup" className="auth-link">Create account</Link>
+            <Link to="/forgot-password" className="auth-link">
+              Forgot password?
+            </Link>
+            <Link to="/signup" className="auth-link">
+              Create account
+            </Link>
           </div>
-          <button type="submit" className="auth-button">Sign in</button>
         </form>
       </div>
     </div>
